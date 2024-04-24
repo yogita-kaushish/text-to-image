@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include "nav.html" %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generate Images</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #main-container {
+        display: flex;
+        height: 100%;
+      }
+
+      #sidebar {
+        width: 20%;
+        padding: 30px;
+        margin-left: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        overflow-y: auto; /* Enable vertical scrolling */
+      }
+
+      #content-container {
+        width: 80%;
+        height: 100%; /* Fill remaining height */
+        overflow-y: auto; /* Enable vertical scrolling */
+      }
+
+      #promptFormContainer {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .form-container {
+        width: 100%;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        overflow-y: auto; /* Enable vertical scrolling */
+      }
+
+      #promptFormContainer input[type="text"] {
+        width: calc(100% - 20px);
+        margin-bottom: 10px;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        transition: border-color 0.3s ease;
+      }
+      #promptFormContainer input[type="text"]:focus {
+        border-color: #007bff;
+        outline: none;
+      }
+      #promptFormContainer input[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 4px;
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      #promptFormContainer input[type="submit"]:hover {
+        background-color: #45a049;
+      }
+      .prompt {
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        padding: 20px;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .prompt p {
+        margin: 0;
+      }
+
+      .prompt-id {
+        font-weight: bold;
+      }
+
+      .prompt-content {
+        color: #333;
+      }
+
+      .prompt-status {
+        color: #555;
+      }
+
+      .image-container {
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
+
+      .prompt-image {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main-container" style="width: 100%">
+      <div id="sidebar">{% include 'sidebar.html' %}</div>
+      <div id="content-container">
+        <div id="promptFormContainer">
+          <div class="form-container">
+            <form id="image-form" method="post">
+              {% csrf_token %}
+              <input
+                type="text"
+                name="prompt1"
+                placeholder="Prompt 1"
+                required
+              />
+              <input
+                type="text"
+                name="prompt2"
+                placeholder="Prompt 2"
+                required
+              />
+              <input
+                type="text"
+                name="prompt3"
+                placeholder="Prompt 3"
+                required
+              />
+              <input
+                type="text"
+                name="prompt4"
+                placeholder="Prompt 4"
+                required
+              />
+              <input
+                type="text"
+                name="prompt5"
+                placeholder="Prompt 5"
+                required
+              />
+              <input type="submit" value="Generate Images" />
+            </form>
+          </div>
+        </div>
+        <div id="promptLoaderContainer">loader is loading hahahahahahah</div>
+        <div id="promptResultContainer"></div>
+        <div id="promptErrorContainer">an error occured</div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      // Prevent form submission on page refresh
+      if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+      }
+      formContainerId = "promptFormContainer";
+      loaderContainerId = "promptLoaderContainer";
+      resultContainerId = "promptResultContainer";
+      errorContainerId = "promptErrorContainer";
+
+      toggleElement(loaderContainerId, "hide");
+      toggleElement(resultContainerId, "hide");
+      toggleElement(errorContainerId, "hide");
+
+      function getPromptResults(request_id) {
+        toggleElement(formContainerId, "hide");
+        toggleLoaderContainer("show");
+        $.ajax({
+          type: "GET",
+          url: `/requests/${request_id}`,
+          success: function (response) {
+            populateResultContainer(response);
+          },
+          error: function (xhr, status, error) {
+            populateErrorContainer(error);
+          },
+        });
+      }
+
+      // Function to toggle sidebar and main content
+      function toggleSidebar() {
+        var sidebar = document.getElementById("sidebar");
+        var mainContent = document.getElementById("main-content");
+        if (sidebar.style.width === "200px") {
+          sidebar.style.width = "0";
+          mainContent.style.marginLeft = "0";
+        } else {
+          sidebar.style.width = "200px";
+          mainContent.style.marginLeft = "200px";
+        }
+      }
+
+      function toggleLoaderContainer(control) {
+        toggleElement(loaderContainerId, control);
+      }
+
+      function togglePromptWindow() {
+        toggleElement(loaderContainerId, "hide");
+        toggleElement(resultContainerId, "hide");
+        toggleElement(errorContainerId, "hide");
+        toggleElement(formContainerId, "show");
+      }
+
+      function populateErrorContainer(error) {
+        toggleElement(loaderContainerId, "hide");
+        toggleElement(resultContainerId, "hide");
+        toggleElement(errorContainerId, "show");
+        console.error(xhr.responseText);
+      }
+
+      function populateResultContainer(prompts) {
+        var container = document.getElementById(resultContainerId);
+
+        // Clear previous dialog boxes
+        container.innerHTML = "";
+
+        prompts.forEach((prompt) => {
+          // Create a new div element for each prompt
+          // Create a new div element for each prompt
+          var promptDiv = document.createElement("div");
+          promptDiv.className = "prompt";
+
+          // Create elements for each property of the prompt and add appropriate styling
+          var idElement = document.createElement("p");
+          idElement.textContent = "ID: " + prompt.id;
+          idElement.className = "prompt-id";
+          promptDiv.appendChild(idElement);
+
+          var contentElement = document.createElement("p");
+          contentElement.textContent = "Content: " + prompt.content;
+          contentElement.className = "prompt-content";
+          promptDiv.appendChild(contentElement);
+
+          var statusElement = document.createElement("p");
+          statusElement.textContent = "Status: " + prompt.status;
+          statusElement.className = "prompt-status";
+          promptDiv.appendChild(statusElement);
+
+          // If the response_url exists, create an image element and add it to the prompt div
+          if (prompt.response_url) {
+            var imageContainer = document.createElement("div");
+            imageContainer.className = "image-container";
+
+            var imageElement = document.createElement("img");
+            imageElement.src = `/media/${prompt.response_url}`;
+            imageElement.alt = "Image";
+            imageElement.className = "prompt-image";
+            imageContainer.appendChild(imageElement);
+
+            promptDiv.appendChild(imageContainer);
+          }
+
+          // Append the prompt div to the container
+          container.appendChild(promptDiv);
+        });
+        // Show the dialog boxes container
+        toggleElement(resultContainerId, "show");
+        toggleElement(loaderContainerId, "hide");
+        toggleElement(errorContainerId, "hide");
+      }
+
+      function toggleElement(section, action) {
+        if (action === "show") {
+          action = "block";
+        } else if (action === "hide") {
+          action = "none";
+        }
+        let el = document.getElementById(section);
+        if (el) {
+          el.style.display = action;
+        }
+      }
+    </script>
+  </body>
+</html>
