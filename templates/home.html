@@ -112,6 +112,41 @@
         height: auto;
         border-radius: 8px;
       }
+
+      .prompt-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #ccc;
+      }
+
+      .table-header, .table-value {
+        padding: 8px;
+        border: 1px solid #ccc;
+      }
+
+      .table-header {
+        background-color: #f9f9f9;
+        font-weight: bold;
+        width: 30%
+      }
+
+      .table-value {
+        background-color: #ffffff;
+      }
+
+      /* Additional styling for prompt ID and content */
+      .prompt-id {
+        font-weight: bold;
+      }
+
+      .prompt-content {
+        /* Add styling as needed */
+      }
+
+      .prompt-status {
+        /* Add styling as needed */
+      }
+
     </style>
   </head>
   <body>
@@ -235,21 +270,39 @@
           var promptDiv = document.createElement("div");
           promptDiv.className = "prompt";
 
-          // Create elements for each property of the prompt and add appropriate styling
-          var idElement = document.createElement("p");
-          idElement.textContent = "ID: " + prompt.id;
-          idElement.className = "prompt-id";
-          promptDiv.appendChild(idElement);
+          // Create a table element
+          var table = document.createElement("table");
+          table.className = "prompt-table";
 
-          var contentElement = document.createElement("p");
-          contentElement.textContent = "Content: " + prompt.content;
-          contentElement.className = "prompt-content";
-          promptDiv.appendChild(contentElement);
+          // Create the first row for prompt ID
+          var idRow = table.insertRow();
+          var idHeader = idRow.insertCell();
+          idHeader.textContent = "Prompt ID";
+          idHeader.className = "table-header";
+          var idValue = idRow.insertCell();
+          idValue.textContent = prompt.id;
+          idValue.className = "table-value";
 
-          var statusElement = document.createElement("p");
-          statusElement.textContent = "Status: " + prompt.status;
-          statusElement.className = "prompt-status";
-          promptDiv.appendChild(statusElement);
+          // Create the second row for API response code
+          var statusRow = table.insertRow();
+          var statusHeader = statusRow.insertCell();
+          statusHeader.textContent = "API Response Code";
+          statusHeader.className = "table-header";
+          var statusValue = statusRow.insertCell();
+          statusValue.textContent = prompt.status;
+          statusValue.className = "table-value";
+
+          // Create the third row for Prompt
+          var contentRow = table.insertRow();
+          var contentHeader = contentRow.insertCell();
+          contentHeader.textContent = "Prompt";
+          contentHeader.className = "table-header";
+          var contentValue = contentRow.insertCell();
+          contentValue.textContent = prompt.content;
+          contentValue.className = "table-value";
+
+          // Append the table to the promptDiv
+          promptDiv.appendChild(table);
 
           // If the response_url exists, create an image element and add it to the prompt div
           if (prompt.response_url) {
