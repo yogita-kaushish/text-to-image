@@ -42,8 +42,6 @@ def save_prompt_info(prompts, request_info):
     for prompt in prompts.keys():
         file_name = str(uuid.uuid4())+".webp"
         if prompt.startswith('prompt') and prompts[prompt]:
-            print(f"prompts:{prompts[prompt]}")
-            print(f"file_name:{file_name}")
             response = generate_image_task(prompts[prompt], file_name)
             if response == 200:
                Prompts.objects.create(content=prompt, status=response, response_url=file_name, request=request_info)
